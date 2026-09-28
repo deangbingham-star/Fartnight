@@ -2,14 +2,26 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    [Header("Look Sensitivity")]
+    public float sensX;
+    public float sensY;
+    [Header("Clamping")]
+    public float minY;
+    public float maxY;
+    [Header("Spectator")]
+    public float spectatorMoveSpeed;
+    private float rotX;
+    private float rotY;
+    private bool isSpectator;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         rotX += Input.GetAxis("Mouse X") * sensX;
         rotY += Input.GetAxis("Mouse Y") * sensY;
@@ -33,21 +45,19 @@ public class CameraController : MonoBehaviour
         }
         else
         {
+            transform.localRotation = Quaternion.Euler(-rotY,0,0);
+
+            transform.parent.rotation = Quaternion.Euler(0,rotX,0);
         }
     }
 
+public void SetAsSpectator()
+{
+    isSpectator = true;
+    transform.parent=null;
+}
 
-    [Header("Look Sensitivity")]
-    public float sensX;
-    public float sensY;
-    [Header("Clamping")]
-    public float minY;
-    public float maxY;
-    [Header("Spectator")]
-    public float spectatorMoveSpeed;
-    private float rotX;
-    private float rotY;
-    private bool isSpectator;
+
 }
 
 
