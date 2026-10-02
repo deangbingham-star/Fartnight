@@ -40,6 +40,19 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
+  - AddKill
+  - ChangeScene
+  - DamageFlash
+  - Die
+  - GiveAmmo
+  - Heal
+  - ImInGame
+  - Initialize
+  - SpawnBullet
+  - SpawnPlayer
+  - TakeDamage
+  - UpdateLobbyUI
+  - WinGame
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

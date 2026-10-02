@@ -1,178 +1,182 @@
-// using System.Collections;
-// using System.Collections.Generic;
-// using UnityEngine;
-// using Photon.Pun;
-// using Photon.Realtime;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Photon.Pun;
+using Photon.Realtime;
 
-// public class PlayerController : MonoBehaviourPun
-// {
-//     [Header("Stats")]
-//     public float moveSpeed;
-//     public float jumpForce;
+public class PlayerController : MonoBehaviourPun
+{
+    [Header("Stats")]
+    public float moveSpeed;
+    public float jumpForce;
 
-//     [Header("Components")]
-//     public Rigidbody rig;
+    [Header("Components")]
+    public Rigidbody rig;
 
-//     [Header("Photon")]
-//     public int id;
-//     public Player photonPlayer;
+    [Header("Photon")]
+    public int id;
+    public Player photonPlayer;
 
-//     [Header("Stats")]
-//     public int curHp;
-//     public int maxHp;
-//     public int kills;
-//     public bool dead;
-//     private bool flashingDamage;
-//     public MeshRenderer mr;
+    [Header("Stats")]
+    public int curHp;
+    public int maxHp;
+    public int kills;
+    public bool dead;
+    private bool flashingDamage;
+    public MeshRenderer mr;
 
-//     private int curAttackerId;
-//     public PlayerWeapon weapon;
+    private int curAttackerId;
+    public PlayerWeapon weapon;
 
-//     [PunRPC]
-//     public void Initialize(Player player)
-//     {
-//         id = player.ActorNumber;
-//         photonPlayer = player;
-//         GameManager.instance.players[id - 1] = this;
+    [PunRPC]
+    public void Initialize(Player player)
+    {
+        id = player.ActorNumber;
+        photonPlayer = player;
+        GameManager.instance.players[id - 1] = this;
 
-       
-//         if (!photonView.IsMine)
-//         {
-           
-//             GetComponentInChildren<Camera>().gameObject.SetActive(false);
+        // is this not our local player?
+        if (!photonView.IsMine)
+        {
+            // deactivate other players' cameras in my game
+            GetComponentInChildren<Camera>().gameObject.SetActive(false);
 
+            // turn off other players' physics in my game (let Photon tell us what's happening to them)
+            rig.isKinematic = true;
+        }
+        else
+        {
+            //GameUI.instance.Initialize(this);
+        }
+    }
 
-//             rig.isKinematic = true;
-//         }
-//         else
-//         {
-//             GameUI.instance.Initialize(this);
-//         }
-//     }
+    void Update()
+    {
+        if (!photonView.IsMine || dead)
+        {
+            // we'll handle movement for other players via the PhotonTransformView, so just return if this player isn't me
+            return;
+        }
 
-//     void Update()
-//     {
-//         if (!photonView.IsMine || dead)
-//         {
- 
-//             return;
-//         }
+        Move();
+        if (Input.GetKeyDown(KeyCode.Space))
+            TryJump();
+        if (Input.GetMouseButtonDown(0))
+            weapon.TryShoot();
+    }
 
-//         Move();
-//         if (Input.GetKeyDown(KeyCode.Space))
-//             TryJump();
-//         if (Input.GetMouseButtonDown(0))
-//             weapon.TryShoot();
-//     }
+    void Move()
+    {
+        // get the input axis
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
 
-//     void Move()
-//     {
+        // calculate a direction relative to where we're facing
+        Vector3 dir = (transform.forward * z + transform.right * x) * moveSpeed;
+        dir.y = rig.linearVelocity.y;
 
-//         float x = Input.GetAxis("Horizontal");
-//         float z = Input.GetAxis("Vertical");
+        // set that as our velocity
+        rig.linearVelocity = dir;
+    }
 
- 
-//         Vector3 dir = (transform.forward * z + transform.right * x) * moveSpeed;
-//         dir.y = rig.velocity.y;
+    void TryJump()
+    {
+        // create a ray facing down
+        Ray ray = new Ray(transform.position, Vector3.down);
 
+        // shoot the raycast
+        if (Physics.Raycast(ray, 1.5f))
+            rig.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+    }
 
-//         rig.velocity = dir;
-//     }
+    [PunRPC]
+    public void TakeDamage(int attackerId, int damage)
+    {
+        if (dead)
+            return;
 
-//     void TryJump()
-//     {
+        curHp -= damage;
+        curAttackerId = attackerId;
 
-//         Ray ray = new Ray(transform.position, Vector3.down);
+        // flash the player red
+        // we don't need to call this on ourselves because we can't see our own body
+        photonView.RPC("DamageFlash", RpcTarget.Others);
 
+        // update the health bar UI
+        //GameUI.instance.UpdateHealthBar();
 
-//         if (Physics.Raycast(ray, 1.5f))
-//             rig.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-//     }
+        // die if no health left
+        if (curHp <= 0)
+            photonView.RPC("Die", RpcTarget.All);
+    }
 
-//     [PunRPC]
-//     public void TakeDamage(int attackerId, int damage)
-//     {
-//         if (dead)
-//             return;
+    [PunRPC]
+    void DamageFlash()
+    {
+        if (flashingDamage)
+            return;
 
-//         curHp -= damage;
-//         curAttackerId = attackerId;
+        StartCoroutine(DamageFlashCoRoutine());
 
+        IEnumerator DamageFlashCoRoutine()
+        {
+            flashingDamage = true;
+            Color defaultColor = mr.material.color;
+            mr.material.color = Color.red;
 
-//         photonView.RPC("DamageFlash", RpcTarget.Others);
+            yield return new WaitForSeconds(0.05f);
 
+            mr.material.color = defaultColor;
+            flashingDamage = false;
+        }
+    }
 
-//         GameUI.instance.UpdateHealthBar();
+    [PunRPC]
+    void Die()
+    {
+        // Q: How does it know which player this is being called about?
+        // A: In TakeDamage, the PlayerController that is dying tells all clients to run the Die function.
+        //      Photon Network then runs the die function on the playercontroller that sent it.
+        curHp = 0;
+        dead = true;
 
+        GameManager.instance.alivePlayers--;
+        //GameUI.instance.UpdatePlayerInfoText();
 
-//         if (curHp <= 0)
-//             photonView.RPC("Die", RpcTarget.All);
-//     }
+        // host will check win condition
+        // CheckWinCondition doesn't just check, but also ends the game, so flow would stop there
+        if (PhotonNetwork.IsMasterClient)
+            GameManager.instance.CheckWinCondition();
 
-//     [PunRPC]
-//     void DamageFlash()
-//     {
-//         if (flashingDamage)
-//             return;
+        if (photonView.IsMine)
+        {
+            // check if I'm dying to a player or the force field
+            if (curAttackerId != 0)
+                GameManager.instance.GetPlayer(curAttackerId).photonView.RPC("AddKill", RpcTarget.All);
 
-//         StartCoroutine(DamageFlashCoRoutine());
+            // set the cam to spectator mode
+            GetComponentInChildren<CameraController>().SetAsSpectator();
 
-//         IEnumerator DamageFlashCoRoutine()
-//         {
-//             flashingDamage = true;
-//             Color defaultColor = mr.material.color;
-//             mr.material.color = Color.red;
+            // disable physics and hide the player avatar
+            rig.isKinematic = true;
+            transform.position = new Vector3(0, -50, 0);
+        }
+    }
 
-//             yield return new WaitForSeconds(0.05f);
+    [PunRPC]
+    public void AddKill()
+    {
+        kills++;
+        //GameUI.instance.UpdatePlayerInfoText();
+    }
 
-//             mr.material.color = defaultColor;
-//             flashingDamage = false;
-//         }
-//     }
+    [PunRPC]
+    public void Heal(int amountToHeal)
+    {
+        curHp = Mathf.Clamp(curHp + amountToHeal, 0, maxHp);
 
-//     [PunRPC]
-//     void Die()
-//     {
+        // update the health bar UI
+        //GameUI.instance.UpdateHealthBar();
+    }
 
-//         curHp = 0;
-//         dead = true;
-
-//         GameManager.instance.alivePlayers--;
-//         GameUI.instance.UpdatePlayerInfoText();
-
- 
-//         if (PhotonNetwork.IsMasterClient)
-//             GameManager.instance.CheckWinCondition();
-
-//         if (photonView.IsMine)
-//         {
-            
-//             if (curAttackerId != 0)
-//                 GameManager.instance.GetPlayer(curAttackerId).photonView.RPC("AddKill", RpcTarget.All);
-
-         
-//             GetComponentInChildren<CameraController>().SetAsSpectator();
-
-         
-//             rig.isKinematic = true;
-//             transform.position = new Vector3(0, -50, 0);
-//         }
-//     }
-
-//     [PunRPC]
-//     public void AddKill()
-//     {
-//         kills++;
-//         GameUI.instance.UpdatePlayerInfoText();
-//     }
-
-//     [PunRPC]
-//     public void Heal(int amountToHeal)
-//     {
-//         curHp = Mathf.Clamp(curHp + amountToHeal, 0, maxHp);
-
-     
-//         GameUI.instance.UpdateHealthBar();
-//     }
-
-// }
+}
