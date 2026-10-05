@@ -50,11 +50,11 @@ public class PlayerWeapon : MonoBehaviour
         bulletObj.transform.forward = dir;
 
         // get bullet script
-        //Bullet bulletScript = bulletObj.GetComponent<Bullet>();
+        bullet bulletScript = bulletObj.GetComponent<bullet>();
 
         // initialize it and set the velocity
-        //bulletScript.Initialize(damage, player.id, player.photonView.IsMine);
-        //bulletScript.rig.velocity = dir * bulletSpeed;
+        bulletScript.Initialize(damage, player.id, player.photonView.IsMine);
+        bulletScript.rig.linearVelocity = dir * bulletSpeed;
     }
 
     [PunRPC]
