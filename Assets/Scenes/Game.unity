@@ -368,7 +368,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1835244095024025120, guid: 2165a442d31121e4c80dcc622a10e39e, type: 3}
       propertyPath: m_Constraints
-      value: 48
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 8851095441931457844, guid: 2165a442d31121e4c80dcc622a10e39e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -800,7 +800,7 @@ SphereCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
