@@ -77,10 +77,14 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         Debug.Log(playerNameInput);
         PhotonNetwork.NickName = playerNameInput.text;
+
+        createRoomButton.interactable = true;
+        findRoomButton.interactable = true;
     }
 
     public override void OnConnectedToMaster()
     {
+        Debug.Log("Connected to master");
         // enable the menu buttons once we connect to the server
         createRoomButton.interactable = true;
         findRoomButton.interactable = true;
@@ -126,6 +130,7 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [PunRPC]
     void UpdateLobbyUI()
     {
+        Debug.Log("Update lobby ui");
         // enable or disable the start game button depending on if we're the host
         startGameButton.interactable = PhotonNetwork.IsMasterClient;
 
