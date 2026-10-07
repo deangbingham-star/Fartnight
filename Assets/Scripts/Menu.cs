@@ -77,10 +77,14 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         Debug.Log(playerNameInput);
         PhotonNetwork.NickName = playerNameInput.text;
+
+        createRoomButton.interactable = true;
+        findRoomButton.interactable = true;
     }
 
     public override void OnConnectedToMaster()
     {
+        Debug.Log("Connected to master");
         // enable the menu buttons once we connect to the server
         createRoomButton.interactable = true;
         findRoomButton.interactable = true;
@@ -126,16 +130,17 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [PunRPC]
     void UpdateLobbyUI()
     {
-        // enable or disable the start game button depending on if we're the host
-        startGameButton.interactable = PhotonNetwork.IsMasterClient;
+        Debug.Log("Update lobby ui");
+        // // enable or disable the start game button depending on if we're the host
+        // startGameButton.interactable = PhotonNetwork.IsMasterClient;
 
-        // display all the players
-        playerListText.text = "";
-        foreach (Player player in PhotonNetwork.PlayerList)
-            playerListText.text += player.NickName + "\n";
+        // // display all the players
+        // playerListText.text = "";
+        // foreach (Player player in PhotonNetwork.PlayerList)
+        //     playerListText.text += player.NickName + "\n";
 
-        // set the room info text
-        roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
+        // // set the room info text
+        // roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)

@@ -356,7 +356,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -2020185703665671003, guid: 2165a442d31121e4c80dcc622a10e39e, type: 3}
       propertyPath: sceneViewId
-      value: 1
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 1372491510530861357, guid: 2165a442d31121e4c80dcc622a10e39e, type: 3}
       propertyPath: m_Name
