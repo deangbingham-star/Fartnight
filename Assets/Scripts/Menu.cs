@@ -131,16 +131,16 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks
     void UpdateLobbyUI()
     {
         Debug.Log("Update lobby ui");
-        // // enable or disable the start game button depending on if we're the host
-        // startGameButton.interactable = PhotonNetwork.IsMasterClient;
+        // enable or disable the start game button depending on if we're the host
+        startGameButton.interactable = PhotonNetwork.IsMasterClient;
 
-        // // display all the players
-        // playerListText.text = "";
-        // foreach (Player player in PhotonNetwork.PlayerList)
-        //     playerListText.text += player.NickName + "\n";
+        // display all the players
+        playerListText.text = "";
+        foreach (Player player in PhotonNetwork.PlayerList)
+            playerListText.text += player.NickName + "\n";
 
-        // // set the room info text
-        // roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
+        // set the room info text
+        roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
